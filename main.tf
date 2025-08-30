@@ -1,27 +1,13 @@
-# policy: enforce-env-prod.sentinel
-# Purpose: Ensure every resource created by Terraform has the tag Env=prod
-
-import "tfplan"
-import "strings"
-
-# === Function: Check Tags ===
-# Returns true if resource has Env tag set to "prod"
-validate_tags = func(resource) {
-  # Some resources may not support tags, so check existence first
-  if resource.applied.tags is null {
-    return false
-  }
-
-  # Normalize to lowercase to avoid case mismatches
-  value = strings.lower(resource.applied.tags["Env"])
-  return value == "prod"
+provider "aws" {
+  region = "us-east-1" # Change region as needed
 }
 
-# === Main Rule ===
-main = rule {
-  all tfplan.resources as type, instances {
-    all instances as name, res {
-      validate_tags(res)
-    }
+resource "aws_instance" "example" {
+  count = 3
+  ami           = "ami-00ca32bbc84273381" # Amazon Linux 2 AMI in us-east-1 (update per region)
+  instance_type = "t2.micro"
+
+tags = {
+    Name = "Terraform-Server"
   }
 }
