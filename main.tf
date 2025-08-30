@@ -3,6 +3,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "example" {
+  count = 3
   ami           = "ami-00ca32bbc84273381" # Amazon Linux 2 AMI in us-east-1 (update per region)
   instance_type = "t2.micro"
 
