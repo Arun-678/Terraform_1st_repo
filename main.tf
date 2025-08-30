@@ -1,13 +1,27 @@
-provider "aws" {
-  region = "us-east-1" # Change region as needed
+import "tfplan/v2" as tfplan
+
+# Function to check tags
+validate_tags = func(resource) {
+    # Some resources may not support tags
+    if not ("tags" in resource.applied) {
+        return true
+    }
+
+    # Check if "Env" tag exists and equals "Prod"
+    return resource.applied.tags["Env"] is "Prod"
 }
 
-resource "aws_instance" "example" {
-  count = 3
-  ami           = "ami-00ca32bbc84273381" # Amazon Linux 2 AMI in us-east-1 (update per region)
-  instance_type = "t2.micro"
+# Collect all resources from the plan
+resources = filter tfplan.resource_changes as _, rc {
+    rc.mode is "managed" and rc.type is not null
+}
 
-tags = {
-    Name = "Env = Prod"
-  }
+# Run validation
+all_tags_valid = all resources as _, rc {
+    validate_tags(rc)
+}
+
+# Main Rule
+main = rule {
+    all_tags_valid
 }
